@@ -1,0 +1,7 @@
+[package]
+name = "rs-pathfinder"
+version = "0.1.0"
+authors = ["Pierre-André Gagnon <pagagnon@gmail.com>"]
+
+[dependencies]
+rs-graph = { git = "https://github.com/pag4k/rs-graph" }
