@@ -4,7 +4,6 @@ Simple Rust implementation of some pathfinding algorithms.
 ## Features
 - Generate graph from a 2d vector of generic types implementing Walkable and AStarHeuristic traits.
 - Find path between two elements generic type using A* search algorithm.
-- Find all elements within some range using a variation of Dijkstra's algorithm.
 
 ## Todo
 - Add more ways to generate graph.

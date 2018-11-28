@@ -6,7 +6,7 @@ use std::collections::{HashSet, HashMap};
 use std::hash::Hash;
 
 pub trait Walkable {
-    fn is_walkable(&self) -> bool; 
+    fn is_walkable(&self) -> bool;
 }
 
 pub trait AStarHeuristic {
@@ -74,8 +74,8 @@ impl<T: Clone+Copy+Eq+Hash+Walkable+AStarHeuristic> Pathfinder<T> {
         f_score.insert(*start_element, T::get_distance(start_element, end_element));
 
         loop {
-            if open_set.is_empty() { break; } 
-
+            if open_set.is_empty() { break; }
+            //TODO: Use a priority queue instead. of min.
             let current_element = *open_set.iter().min_by(|element1, element2| f_score[*element1].partial_cmp(&f_score[*element2]).unwrap()).unwrap();
             if current_element == *end_element {
                 let mut reverse_element = *end_element;
@@ -96,7 +96,7 @@ impl<T: Clone+Copy+Eq+Hash+Walkable+AStarHeuristic> Pathfinder<T> {
                 self.graph.outgoing_edges(current_element_index).unwrap().is_empty() { continue; }
             self.graph.outgoing_edges(current_element_index).unwrap().iter()
             .map(|edge_index| self.graph.opposite(current_element_index, *edge_index))
-            .filter(|neighbor_index_option| neighbor_index_option.is_some()) 
+            .filter(|neighbor_index_option| neighbor_index_option.is_some())
             .map(|neighbor_index_option| neighbor_index_option.unwrap())
             .filter(|neighbor_index| self.graph.get_element(*neighbor_index).is_some())
             .filter(|neighbor_index| !closed_set.contains(&self.graph.get_element(*neighbor_index).unwrap()))
@@ -113,56 +113,8 @@ impl<T: Clone+Copy+Eq+Hash+Walkable+AStarHeuristic> Pathfinder<T> {
                 }
             })
         }
-        
+
         None
-    }
-
-    pub fn dijkstra_range(&self, element: &T, range: usize) -> Vec<T> {
-        if range == 0 || !element.is_walkable() { return vec!(); }
-        let delta = 1;
-
-        let mut closed_set: HashSet<T> = HashSet::new();
-        let mut open_set: HashSet<T>  = HashSet::new();
-        open_set.insert(*element);
-        let mut distance: HashMap<T, usize> = HashMap::new();
-        distance.insert(*element, 0);
-        let mut came_from: HashMap<T, T> = HashMap::new();
-
-        loop {
-            if open_set.is_empty() { break; } 
-
-            let current_element = match open_set.iter()
-            .find(|element| *distance.get(element).expect("Element is in the open_set Vec, but not in the distance HashMap.") <= range - delta) {
-                Some(element) => *element,
-                None => {
-                    break;
-                }
-            };
-
-            let current_distance = distance[&current_element];
-            open_set.remove(&current_element);
-            closed_set.insert(current_element);
-
-            let current_element_index = self.dictionnary[&current_element];
-            if  self.graph.outgoing_edges(current_element_index).is_none() ||
-                self.graph.outgoing_edges(current_element_index).unwrap().is_empty() { continue; }
-            self.graph.outgoing_edges(current_element_index).unwrap().iter()
-            .map(|edge_index| self.graph.opposite(current_element_index, *edge_index))
-            .filter(|neighbor_index_option| neighbor_index_option.is_some()) 
-            .map(|neighbor_index_option| neighbor_index_option.unwrap())
-            .filter(|neighbor_index| self.graph.get_element(*neighbor_index).is_some())
-            .filter(|neighbor_index| !closed_set.contains(&self.graph.get_element(*neighbor_index).unwrap()))
-            .for_each(|neighbor_index| {
-                let neighbor = self.graph.get_element(neighbor_index).unwrap();
-                if !distance.contains_key(&neighbor) || current_distance+delta < *distance.get(&neighbor).expect("Unreachable code.") {
-                    distance.insert(*neighbor, current_distance+delta);
-                    came_from.insert(*neighbor, current_element);
-                    open_set.insert(*neighbor);
-                }
-            });
-        }
-
-        distance.keys().cloned().collect()
     }
 }
 
@@ -233,28 +185,5 @@ mod tests {
         assert!(pathfinder.astar_path(&map[1][1], &map[3][3]).unwrap().pop().unwrap() != map[4][3]);
         assert!(pathfinder.astar_path(&map[1][1], &map[4][4]).is_none());
         assert!(pathfinder.astar_path(&map[1][1], &map[0][4]).is_none());
-    }
-
-    #[test]
-    fn test_dijkstra_range() {
-        let mapvec: Vec<Vec<usize>> = vec!( vec!(0,0,0,0,1),
-                                            vec!(0,1,0,1,0),
-                                            vec!(0,1,0,1,0),
-                                            vec!(0,1,1,1,0),
-                                            vec!(0,0,0,0,0));
-        let mut map: Vec<Vec<Point2D>> = vec!();
-        for y in 0..5 {
-            map.push(vec!());
-            for x in 0..5 {
-                map[y].push(Point2D { x:x, y:y, walkable: mapvec[y][x] == 1, });
-            }
-        }
-        let pathfinder = Pathfinder::from_2dvec(&map);
-        assert!(pathfinder.dijkstra_range(&map[1][1], 2).len() == 3);
-        assert!(pathfinder.dijkstra_range(&map[1][1], 7).len() == 7);
-        assert!(pathfinder.dijkstra_range(&map[1][1], 7).contains(&map[1][3]));
-        assert!(pathfinder.dijkstra_range(&map[0][4], 10).len() == 1);
-        assert!(pathfinder.dijkstra_range(&map[1][1], 0).is_empty());
-        assert!(pathfinder.dijkstra_range(&map[0][0], 10).is_empty());
     }
 }
