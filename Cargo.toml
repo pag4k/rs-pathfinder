@@ -1,8 +1,8 @@
 [package]
 name = "rs-pathfinder"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Pierre-André Gagnon <pagagnon@gmail.com>"]
 
 [dependencies]
-rs-graph = { git = "https://github.com/pag4k/rs-graph", version = "0.1.1" }
-rs-binaryheap = { git = "https://github.com/pag4k/rs-binaryheap" }
+rs-graph = { git = "https://github.com/pag4k/rs-graph", version = "^0" }
+rs-binaryheap = { git = "https://github.com/pag4k/rs-binaryheap", version = "^0" }
