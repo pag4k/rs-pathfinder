@@ -34,7 +34,7 @@ impl<T: Clone + Copy + Eq + Hash + Walkable + AStarHeuristic> Pathfinder<T> {
             row.iter().enumerate().for_each(|(x, element)| {
                 if element.is_walkable() {
                     vertex_map.insert(*element, graph.insert_vertex(*element));
-                    coordinates_map.insert(*element, (y, x));
+                    coordinates_map.insert(*element, (x, y));
                 }
             })
         });
@@ -42,17 +42,17 @@ impl<T: Clone + Copy + Eq + Hash + Walkable + AStarHeuristic> Pathfinder<T> {
         let neighbors: Vec<(isize, isize)> = vec![(1, 0), (0, 1), (-1, 0), (0, -1)];
 
         vertex_map.iter().for_each(|(vertex, &index)| {
-            let (current_y, current_x) = coordinates_map
+            let (current_x, current_y) = coordinates_map
                 .get(vertex)
                 .expect("Could not find vertex coordinates.");
             neighbors
                 .iter()
-                .map(|(dy, dx)| ((*current_y as isize) + dx, (*current_x as isize) + dy))
-                .filter(|(y, x)| *y >= 0 && *x >= 0)
-                .filter(|(y, x)| {
+                .map(|(dx, dy)| ((*current_x as isize) + dx, (*current_y as isize) + dy))
+                .filter(|(x, y)| *y >= 0 && *x >= 0)
+                .filter(|(x, y)| {
                     map.get(*y as usize).is_some() && map[*y as usize].get(*x as usize).is_some()
                 })
-                .map(|(y, x)| &map[y as usize][x as usize])
+                .map(|(x, y)| &map[y as usize][x as usize])
                 .filter(|element| vertex_map.contains_key(element))
                 .for_each(|element| {
                     graph.insert_edge(1, index, vertex_map[element]).unwrap();
@@ -111,9 +111,9 @@ impl<T: Clone + Copy + Eq + Hash + Walkable + AStarHeuristic> Pathfinder<T> {
         let start_index = start_index.cloned().unwrap();
         let end_index = end_index.cloned().unwrap();
 
-        //If they are are the same, abort.
+        //If they are are the same, return a path with only that element.
         if start_index == end_index {
-            return None;
+            return Some(vec![*graph.get_vertex_element(start_index).unwrap()]);
         }
 
         //Instantiate BinaryHeap and add start_index.
@@ -356,6 +356,7 @@ mod tests {
         let pathfinder = Pathfinder::from_2dvec(&map);
         assert!(pathfinder.get_neighbors(&map[1][1]).is_some());
         assert!(pathfinder.get_neighbors(&map[2][1]).unwrap().len() == 2);
+        println!("{:?}", pathfinder.get_neighbors(&map[1][3]));
         assert!(pathfinder
             .get_neighbors(&map[1][3])
             .unwrap()
@@ -428,6 +429,8 @@ mod tests {
             }
         }
         let pathfinder = Pathfinder::from_2dvec(&map);
+        assert!(pathfinder.dijkstra(&map[1][1], &map[1][1]).is_some());
+        assert!(pathfinder.dijkstra(&map[1][1], &map[1][1]).unwrap().len() == 1);
         assert!(pathfinder.dijkstra(&map[1][1], &map[3][3]).is_some());
         assert!(pathfinder.dijkstra(&map[1][1], &map[3][3]).unwrap().len() == 5);
         assert!(pathfinder.dijkstra(&map[1][1], &map[3][3]).unwrap()[0] == map[1][1]);
